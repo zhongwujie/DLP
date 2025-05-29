@@ -45,7 +45,7 @@ We provide a quick overview of the arguments:
 Below is an example command for pruning LLaMA-7B with DLP, to achieve unstructured 70% sparsity.
 
 ```
-    python   run.py \
+python   run.py \
     --model "Enoch/llama-7b-hf" \
     --alpha 0.15 \
     --prune_method "wanda_dlp" \
