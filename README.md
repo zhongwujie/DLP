@@ -70,5 +70,18 @@ python   run.py \
 This repository is build upon the [OWL](https://github.com/luuyin/OWL) repositories.
 
 
+### Citation
+
+```
+@misc{chen2025dlpdynamiclayerwisepruning,
+      title={DLP: Dynamic Layerwise Pruning in Large Language Models}, 
+      author={Yuli Chen and Bo Cheng and Jiale Han and Yingying Zhang and Yingting Li and Shuhao Zhang},
+      year={2025},
+      eprint={2505.23807},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2505.23807}, 
+}
+```
 
 
