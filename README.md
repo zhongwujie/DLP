@@ -1,6 +1,6 @@
 #  DLP
 
-Official PyTorch implementation of DLP: Dynamic Layerwise Pruning in Large Language Models
+Official PyTorch implementation of [DLP: Dynamic Layerwise Pruning in Large Language Models](https://arxiv.org/abs/2505.23807)
 
 
 
