@@ -269,6 +269,16 @@ def prune_wanda_dlp(args, model, tokenizer,  device=torch.device("cuda:0"), imp_
         else:
             inps, outs, attention_mask, position_ids = prepare_calibration_input(model, dataloader, device)
 
+    # --- Code Correction: Pre-calculate positional embeddings with correct parameters ---
+    if position_ids is None:
+        position_ids = torch.arange(model.seqlen, device=device).unsqueeze(0)
+        print("Warning: position_ids not found in cache, creating manually.")
+
+    position_ids = position_ids.to(device)
+    rotary_emb = model.model.rotary_emb.to(device)
+    position_embeddings = rotary_emb(inps, position_ids)
+    # --- End of Correction ---
+
     if "opt" in args.model:
         layers=model.model.decoder.layers
     else:
@@ -279,7 +289,7 @@ def prune_wanda_dlp(args, model, tokenizer,  device=torch.device("cuda:0"), imp_
         subset = find_layers(layer)
 
         if "llama" in args.model:
-            if f"model.layers.{i}" in model.hf_device_map:   ## handle the case for llama-30B and llama-65B, when the device map has multiple GPUs;
+            if hasattr(model, 'hf_device_map') and f"model.layers.{i}" in model.hf_device_map:   ## handle the case for llama-30B and llama-65B, when the device map has multiple GPUs;
                 dev = model.hf_device_map[f"model.layers.{i}"]
                 inps, outs, position_ids = inps.to(dev), outs.to(dev), position_ids.to(dev)
 
@@ -300,7 +310,8 @@ def prune_wanda_dlp(args, model, tokenizer,  device=torch.device("cuda:0"), imp_
                 if "OPT" in model.__class__.__name__:
                     outs[j] = layer(inps[j].unsqueeze(0), attention_mask=attention_mask)[0]
                 else:
-                    outs[j] = layer(inps[j].unsqueeze(0), attention_mask=attention_mask, position_ids=position_ids)[0]
+                    outs[j] = layer(inps[j].unsqueeze(0), attention_mask=attention_mask, 
+                        position_ids=position_ids, position_embeddings=position_embeddings)[0]
         for h in handles:
             h.remove()
         time_start = time.time()
@@ -355,7 +366,8 @@ def prune_wanda_dlp(args, model, tokenizer,  device=torch.device("cuda:0"), imp_
                 if "OPT" in model.__class__.__name__:
                     outs[j] = layer(inps[j].unsqueeze(0), attention_mask=attention_mask)[0]
                 else:
-                    outs[j] = layer(inps[j].unsqueeze(0), attention_mask=attention_mask, position_ids=position_ids)[0]
+                    outs[j] = layer(inps[j].unsqueeze(0), attention_mask=attention_mask, 
+                        position_ids=position_ids, position_embeddings=position_embeddings)[0]
         inps, outs = outs, inps
     print(f"time_total: {time_total}")
     model.config.use_cache = use_cache 
@@ -493,6 +505,16 @@ def prune_sparsegpt_dlp(args, model, tokenizer, dev, imp_ratio=None, prune_n=0, 
     attention_mask = cache['attention_mask']
     position_ids = cache['position_ids']
 
+    # --- Code Correction: Pre-calculate positional embeddings with correct parameters ---
+    if position_ids is None:
+        position_ids = torch.arange(model.seqlen, device=device).unsqueeze(0)
+        print("Warning: position_ids not found in cache, creating manually.")
+
+    position_ids = position_ids.to(device)
+    rotary_emb = model.model.rotary_emb.to(device)
+    position_embeddings = rotary_emb(inps, position_ids)
+    # --- End of Correction ---
+
     for i in range(len(layers)):
         layer_sparsity_ratio= 1 - imp_ratio[i]
         if layer_sparsity_ratio <= 0:
@@ -500,7 +522,7 @@ def prune_sparsegpt_dlp(args, model, tokenizer, dev, imp_ratio=None, prune_n=0, 
 
         layer = layers[i]
         if "llama" in args.model:
-            if f"model.layers.{i}" in model.hf_device_map:   ## handle the case for llama-30B and llama-65B, when the device map has multiple GPUs;
+            if hasattr(model, 'hf_device_map') and f"model.layers.{i}" in model.hf_device_map:   ## handle the case for llama-30B and llama-65B, when the device map has multiple GPUs;
                 dev = model.hf_device_map[f"model.layers.{i}"]
                 inps, outs, position_ids = inps.to(dev), outs.to(dev), position_ids.to(dev)
 
@@ -524,7 +546,8 @@ def prune_sparsegpt_dlp(args, model, tokenizer, dev, imp_ratio=None, prune_n=0, 
                 if "OPT" in model.__class__.__name__:
                     outs[j] = layer(inps[j].unsqueeze(0), attention_mask=attention_mask)[0]
                 else:
-                    outs[j] = layer(inps[j].unsqueeze(0), attention_mask=attention_mask, position_ids=position_ids)[0]
+                    outs[j] = layer(inps[j].unsqueeze(0), attention_mask=attention_mask, 
+                        position_ids=position_ids, position_embeddings=position_embeddings)[0]
         for h in handles:
             h.remove()
         time_start = time.time()
@@ -540,7 +563,8 @@ def prune_sparsegpt_dlp(args, model, tokenizer, dev, imp_ratio=None, prune_n=0, 
                 if "OPT" in model.__class__.__name__:
                     outs[j] = layer(inps[j].unsqueeze(0), attention_mask=attention_mask)[0]
                 else:
-                    outs[j] = layer(inps[j].unsqueeze(0), attention_mask=attention_mask, position_ids=position_ids)[0]
+                    outs[j] = layer(inps[j].unsqueeze(0), attention_mask=attention_mask, 
+                        position_ids=position_ids, position_embeddings=position_embeddings)[0]
         layers[i] = layer 
         
 
