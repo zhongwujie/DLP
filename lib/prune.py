@@ -270,13 +270,14 @@ def prune_wanda_dlp(args, model, tokenizer,  device=torch.device("cuda:0"), imp_
             inps, outs, attention_mask, position_ids = prepare_calibration_input(model, dataloader, device)
 
     # --- Code Correction: Pre-calculate positional embeddings with correct parameters ---
-    if position_ids is None:
-        position_ids = torch.arange(model.seqlen, device=device).unsqueeze(0)
-        print("Warning: position_ids not found in cache, creating manually.")
+    if "llama" in args.model.lower():
+        if position_ids is None:
+            position_ids = torch.arange(model.seqlen, device=device).unsqueeze(0)
+            print("Warning: position_ids not found in cache, creating manually.")
 
-    position_ids = position_ids.to(device)
-    rotary_emb = model.model.rotary_emb.to(device)
-    position_embeddings = rotary_emb(inps, position_ids)
+        position_ids = position_ids.to(device)
+        rotary_emb = model.model.rotary_emb.to(device)
+        position_embeddings = rotary_emb(inps, position_ids)
     # --- End of Correction ---
 
     if "opt" in args.model:
@@ -506,13 +507,14 @@ def prune_sparsegpt_dlp(args, model, tokenizer, dev, imp_ratio=None, prune_n=0, 
     position_ids = cache['position_ids']
 
     # --- Code Correction: Pre-calculate positional embeddings with correct parameters ---
-    if position_ids is None:
-        position_ids = torch.arange(model.seqlen, device=device).unsqueeze(0)
-        print("Warning: position_ids not found in cache, creating manually.")
+    if "llama" in args.model.lower():
+        if position_ids is None:
+            position_ids = torch.arange(model.seqlen, device=device).unsqueeze(0)
+            print("Warning: position_ids not found in cache, creating manually.")
 
-    position_ids = position_ids.to(device)
-    rotary_emb = model.model.rotary_emb.to(device)
-    position_embeddings = rotary_emb(inps, position_ids)
+        position_ids = position_ids.to(device)
+        rotary_emb = model.model.rotary_emb.to(device)
+        position_embeddings = rotary_emb(inps, position_ids)
     # --- End of Correction ---
 
     for i in range(len(layers)):
